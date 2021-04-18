@@ -19,7 +19,7 @@ class Board extends React.Component {
             squares: grid,
             click: false,
             traversed: new Set(),
-            showAccess: false,
+            showAccess: this.props.accessDefault,
         };
     }
 
@@ -169,23 +169,23 @@ class Board extends React.Component {
                         value={this.getAccess([i, j])}
                         onClick={() => this.handleSquareClick([i, j])}/>))}
                 </div>))}
-                {(this.props.movable || this.props.auto) && <Button
+                {(this.props.movable || this.props.auto) && !this.props.example && <Button
                     variant="contained"
                     onClick={() => this.handleResetClick()}
                     color="secondary">
                     Reset
                 </Button>}
-                {this.props.auto && <Button
+                {this.props.auto && !this.props.example && <Button
                     variant="contained"
                     onClick={() => this.handleStepClick()}
                     color="secondary">
                     Step
                 </Button>}
-                {this.props.auto && <Button
+                {this.props.auto && !this.props.example && <Button
                     variant="contained"
                     onClick={() => this.setState({showAccess: !this.state.showAccess})}
                     color="secondary">
-                    Show Accessibility
+                    {this.state.showAccess ? "Hide Accessibility" : "Show Accessibility"}
                 </Button>}
             </div>
         );

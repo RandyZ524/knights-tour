@@ -25,6 +25,21 @@ function App() {
             width={8} height={8}
             knight={[0, 0]}
             movable={true} tourable={true} auto={false}/>
+        <p>
+            Warnsdorff's rule for solving knight's tours relies on the concept of <em> accessibility</em>, defined as
+            the number of valid moves a square has. Invalid moves are ones that would put the knight out of bounds or
+            onto a square already traversed.
+        </p>
+        <Board
+            width={5} height={5}
+            knight={[2, 1]}
+            movable={false} tourable={true} auto={true}
+            accessDefault={true} example={true}/>
+        <p>
+            The algorithm is very simple: at each step, calculate the accessibility of every square that can be directly
+            moved to, then choose the square with the smallest accessibility. In the case of a tie, the simplest version
+            of the algorithm tiebreaks randomly.
+        </p>
         <Board
             width={8} height={8}
             knight={[0, 0]}
