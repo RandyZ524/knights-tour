@@ -9,7 +9,6 @@ export default class Board extends React.Component {
                 500 / this.props.width),
             knightPos: this.props.knight,
             clicked: false,
-            traversed: new Set(),
         };
         this.setContext = this.setContext.bind(this);
         this.knightImg = new Image(this.state.squareSide, this.state.squareSide);
@@ -31,7 +30,6 @@ export default class Board extends React.Component {
 
     handleClick(e) {
         let clickCoords = this.coordsToIndex(this.getMousePos(e));
-        console.log(clickCoords);
         if (this.posEqual(this.state.knightPos, clickCoords)) {
             this.setState({
                 clicked: !this.state.clicked,
@@ -47,12 +45,10 @@ export default class Board extends React.Component {
     getMousePos(e) {
         let canvasRef = document.getElementById("canvas" + this.props.id);
         let bound = canvasRef.getBoundingClientRect();
-        let bef = [
+        return [
             (e.clientX - bound.left) / (bound.right - bound.left) * canvasRef.width,
             ((e.clientY - bound.top) / (bound.bottom - bound.top) * canvasRef.height)
         ];
-        console.log(bef);
-        return bef;
     }
 
     drawTemp() {
@@ -110,9 +106,7 @@ export default class Board extends React.Component {
     }
 
     getColor(pos) {
-        if (this.props.tourable && this.state.traversed.has(pos.toString())) {
-            return '#ffffff';
-        } else if (this.posEqual(this.state.knightPos, pos) && this.state.clicked) {
+        if (this.posEqual(this.state.knightPos, pos) && this.state.clicked) {
             return '#829769';
         } else {
             return (pos[0] + pos[1]) % 2 === 0 ? '#f0d9b5' : '#b58863';
@@ -124,9 +118,6 @@ export default class Board extends React.Component {
     }
 
     isValidMove(pos) {
-        if (this.props.tourable && this.state.traversed.has(pos.toString())) {
-            return false;
-        }
         const deltaX = Math.abs(this.state.knightPos[0] - pos[0]);
         const deltaY = Math.abs(this.state.knightPos[1] - pos[1]);
         return deltaX > 0 && deltaY > 0 && deltaX + deltaY === 3;

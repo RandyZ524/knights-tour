@@ -1,5 +1,6 @@
 import './App.css';
 import Board from './Board';
+import TourBoard from './TourBoard';
 
 function App() {
   return (
@@ -15,16 +16,16 @@ function App() {
         <Board
             id={0}
             width={5} height={4} knight={[1, 1]}
-            movable={false} tourable={false}/>
+            movable={false}/>
         <p>
             One of the most ancient and well-known chess puzzles, dating back to at least the 9th century, is to find a
             path for the knight such that it visits every square on the chessboard exactly once. This is known as a
             <em> knight's tour</em>. Try finding one yourself!
         </p>
-        <Board
+        <TourBoard
             id={1}
             width={8} height={8} knight={[0, 0]}
-            movable={false} tourable={true}/>
+            movable={false}/>
     </div>
   );
 }
