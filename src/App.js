@@ -1,6 +1,7 @@
 import './App.css';
 import Board from './Board';
 import TourBoard from './TourBoard';
+import AutoBoard from './AutoBoard';
 
 function App() {
   return (
@@ -15,8 +16,7 @@ function App() {
         </p>
         <Board
             id={0}
-            width={5} height={4} knight={[1, 1]}
-            movable={false}/>
+            width={5} height={4} knight={[1, 1]}/>
         <p>
             One of the most ancient and well-known chess puzzles, dating back to at least the 9th century, is to find a
             path for the knight such that it visits every square on the chessboard exactly once. This is known as a
@@ -24,8 +24,15 @@ function App() {
         </p>
         <TourBoard
             id={1}
-            width={8} height={8} knight={[0, 0]}
-            movable={false}/>
+            width={8} height={8} knight={[0, 0]}/>
+        <p>
+            The algorithm is very simple: at each step, calculate the accessibility of every square that can be directly
+            moved to, then choose the square with the smallest accessibility. In the case of a tie, the simplest version
+            of the algorithm tiebreaks randomly.
+        </p>
+        <AutoBoard
+            id={2}
+            width={8} height={8} knight={[0, 0]}/>
     </div>
   );
 }
