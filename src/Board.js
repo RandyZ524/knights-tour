@@ -24,8 +24,8 @@ export default class Board extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         this.drawBoard();
     }
-    handleClick = (e) => {
-        let clickCoords = this.coordsToIndex(this.getMousePos(e));
+    handleClick(e) {
+        let clickCoords = this.coordsToPos(this.getMousePos(e));
         if (this.posEqual(this.state.knightPos, clickCoords)) {
             this.setState({
                 clicked: !this.state.clicked,
@@ -47,7 +47,7 @@ export default class Board extends React.Component {
     drawTemp = () => {
         let temp = new Image(this.state.squareSide, this.state.squareSide);
         temp.src = process.env.PUBLIC_URL + "knight.png";
-        let coords = this.indexToCoords(this.state.knightPos);
+        let coords = this.posToCoords(this.state.knightPos);
         let ctxRef = this.ctx;
         let squareRef = this.state.squareSide;
         temp.onload = function() {
@@ -55,7 +55,7 @@ export default class Board extends React.Component {
                 squareRef, squareRef);
         }
     }
-    drawBoard = () => {
+    drawBoard() {
         for (let i = 0; i < this.props.width; i++) {
             for (let j = 0; j < this.props.height; j++) {
                 this.drawSquare([i, j]);
@@ -65,27 +65,27 @@ export default class Board extends React.Component {
             }
         }
         if (this.knightImg.complete) {
-            this.ctx.drawImage(this.knightImg, ...this.indexToCoords(this.state.knightPos),
+            this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
                 this.state.squareSide, this.state.squareSide);
         }
     }
-    drawSquare = (index) => {
-        let coords = this.indexToCoords(index);
+    drawSquare = (pos) => {
+        let coords = this.posToCoords(pos);
         this.ctx.beginPath();
-        this.ctx.fillStyle = this.getColor(index);
+        this.ctx.fillStyle = this.getColor(pos);
         this.ctx.fillRect(...coords, this.state.squareSide, this.state.squareSide);
     }
-    drawValid = (index) => {
+    drawValid = (pos) => {
         this.ctx.beginPath();
-        this.ctx.fillStyle = (index[0] + index[1]) % 2 === 0 ? '#819769' : '#646c44';
-        this.ctx.arc(...this.indexToCoords(index).map(c => c + this.state.squareSide / 2),
+        this.ctx.fillStyle = (pos[0] + pos[1]) % 2 === 0 ? '#819769' : '#646c44';
+        this.ctx.arc(...this.posToCoords(pos).map(c => c + this.state.squareSide / 2),
             this.state.squareSide / 7, 0, 2 * Math.PI);
         this.ctx.fill();
     }
-    indexToCoords = (index) => {
-        return index.map(i => i * this.state.squareSide);
+    posToCoords = (pos) => {
+        return pos.map(i => i * this.state.squareSide);
     }
-    coordsToIndex = (coords) => {
+    coordsToPos = (coords) => {
         return coords.map(c => Math.floor(c / this.state.squareSide));
     }
     getColor(pos) {

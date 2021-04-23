@@ -8,10 +8,10 @@ export default class TourBoard extends Board {
         this.state["traversed"] = [];
     }
     indexToInt = (pos) => {
-        return pos[0] * this.props.width + pos[1];
+        return pos[1] * this.props.width + pos[0];
     }
     intToIndex = (int) => {
-        return [Math.floor(int / this.props.width), (int % this.props.width)];
+        return [(int % this.props.width), Math.floor(int / this.props.width)];
     }
     getColor(pos) {
         if (this.state.traversed.includes(this.indexToInt(pos))) {
@@ -28,7 +28,7 @@ export default class TourBoard extends Board {
         }
     }
     handleClick = (e) => {
-        let clickCoords = this.coordsToIndex(this.getMousePos(e));
+        let clickCoords = this.coordsToPos(this.getMousePos(e));
         if (this.posEqual(this.state.knightPos, clickCoords)) {
             this.setState({
                 clicked: !this.state.clicked,
