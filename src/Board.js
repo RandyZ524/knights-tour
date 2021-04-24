@@ -14,13 +14,16 @@ export default class Board extends React.Component {
         this.knightImg = new Image(this.state.squareSide, this.state.squareSide);
         this.knightImg.src = process.env.PUBLIC_URL + "knight.png";
     }
+
     setContext(r) {
         this.ctx = r.getContext("2d");
     }
+
     componentDidMount() {
         this.drawTemp();
         this.drawBoard();
     }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.posEqual(this.state.knightPos, this.props.knight)) {
             this.drawBoard();
@@ -34,6 +37,7 @@ export default class Board extends React.Component {
                 ...this.getValidMoves(prevState.knightPos)]);
         }
     }
+
     handleClick(e) {
         let clickCoords = this.coordsToPos(this.getMousePos(e));
         if (this.posEqual(this.state.knightPos, clickCoords)) {
@@ -46,6 +50,7 @@ export default class Board extends React.Component {
             })
         }
     }
+
     getMousePos = (e) => {
         let canvasRef = document.getElementById("canvas" + this.props.id);
         let bound = canvasRef.getBoundingClientRect();
@@ -55,15 +60,7 @@ export default class Board extends React.Component {
         ];
     }
     getValidMoves = (pos) => {
-        let moves = [];
-        moves.push([pos[0] - 2, pos[1] - 1]);
-        moves.push([pos[0] + 2, pos[1] - 1]);
-        moves.push([pos[0] - 2, pos[1] + 1]);
-        moves.push([pos[0] + 2, pos[1] + 1]);
-        moves.push([pos[0] - 1, pos[1] - 2]);
-        moves.push([pos[0] + 1, pos[1] - 2]);
-        moves.push([pos[0] - 1, pos[1] + 2]);
-        moves.push([pos[0] + 1, pos[1] + 2]);
+        let moves = this.getPossibleMoves(pos);
         for (let i = moves.length; i--;) {
             if (moves[i][0] < 0 || moves[i][0] >= this.props.width ||
                 moves[i][1] < 0 || moves[i][1] >= this.props.height ||
@@ -73,16 +70,23 @@ export default class Board extends React.Component {
         }
         return moves;
     }
+    getPossibleMoves = (pos) => {
+        return [[pos[0] - 2, pos[1] - 1], [pos[0] + 2, pos[1] - 1],
+            [pos[0] - 2, pos[1] + 1], [pos[0] + 2, pos[1] + 1],
+            [pos[0] - 1, pos[1] - 2], [pos[0] + 1, pos[1] - 2],
+            [pos[0] - 1, pos[1] + 2], [pos[0] + 1, pos[1] + 2]];
+    }
+
     drawTemp() {
         let temp = new Image(this.state.squareSide, this.state.squareSide);
         temp.src = process.env.PUBLIC_URL + "knight.png";
         let lengthFactor = 0.64;
         let distFromEdge = (1 - lengthFactor) / 2;
         let coords = this.posToCoords(this.state.knightPos)
-                .map(c => c + this.state.squareSide * distFromEdge);
+            .map(c => c + this.state.squareSide * distFromEdge);
         let ctxRef = this.ctx;
         let squareLength = this.state.squareSide * lengthFactor;
-        temp.onload = function() {
+        temp.onload = function () {
             ctxRef.drawImage(temp, ...coords,
                 squareLength, squareLength);
         }
@@ -127,12 +131,14 @@ export default class Board extends React.Component {
                 this.state.squareSide * lengthFactor, this.state.squareSide * lengthFactor);
         }
     }
+
     posToCoords = (pos) => {
         return pos.map(i => i * this.state.squareSide);
     }
     coordsToPos = (coords) => {
         return coords.map(c => Math.floor(c / this.state.squareSide));
     }
+
     getColor(pos) {
         if (this.posEqual(this.state.knightPos, pos) && this.state.clicked) {
             return '#829769';
@@ -140,22 +146,26 @@ export default class Board extends React.Component {
             return (pos[0] + pos[1]) % 2 === 0 ? '#f0d9b5' : '#b58863';
         }
     }
+
     posEqual = (pos1, pos2) => {
         return pos1[0] === pos2[0] && pos1[1] === pos2[1];
     }
+
     isValidMove(pos) {
         const deltaX = Math.abs(this.state.knightPos[0] - pos[0]);
         const deltaY = Math.abs(this.state.knightPos[1] - pos[1]);
         return deltaX > 0 && deltaY > 0 && deltaX + deltaY === 3;
     }
+
     render() {
         return (
             <div>
-                <canvas id={"canvas" + this.props.id}
+                <canvas
+                    id={"canvas" + this.props.id}
                     width={this.props.width * this.state.squareSide}
                     height={this.props.height * this.state.squareSide}
                     ref={this.setContext}
-                    onClick={(e) => this.handleClick(e)} />
+                    onClick={this.handleClick}/>
             </div>
         );
     }

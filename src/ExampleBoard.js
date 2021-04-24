@@ -6,6 +6,7 @@ export default class ExampleBoard extends Board {
             super.handleClick(e);
         }
     }
+
     drawAccess(pos) {
         let access = this.getValidMoves(pos).length;
         if (this.props.showAccess && this.isValidMove(pos) && access !== 0) {
@@ -18,6 +19,7 @@ export default class ExampleBoard extends Board {
             this.ctx.fillText(access.toString(), ...coords);
         }
     }
+
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -33,24 +35,22 @@ export default class ExampleBoard extends Board {
         }
         this.drawKnight()
     }
+
     isBottom(el) {
         return el.getBoundingClientRect().bottom <= window.innerHeight;
     }
+
     componentDidMount() {
         super.componentDidMount();
         document.addEventListener('scroll', this.trackScrolling);
     }
+
     trackScrolling = () => {
         if (this.props.scrolling) {
-            if (this.isBottom(document.getElementById("canvas" + this.props.id))) {
-                this.setState({
-                    knightPos: this.props.knightTo,
-                });
-            } else {
-                this.setState({
-                    knightPos: this.props.knight,
-                });
-            }
+            this.setState({
+                knightPos: this.isBottom(document.getElementById("canvas" + this.props.id)) ?
+                    this.props.knightTo : this.props.knight,
+            });
         }
     }
 }

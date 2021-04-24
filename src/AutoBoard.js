@@ -12,11 +12,13 @@ export default class AutoBoard extends TourBoard {
         this.t = undefined;
         this.repeat = this.repeat.bind(this);
     }
+
     repeat() {
         if (this.handleStep() && this.handleStep()) {
             this.t = setTimeout(this.repeat, 0);
         }
     }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.posEqual(this.state.knightPos, this.props.knight)) {
             this.drawBoard();
@@ -29,10 +31,20 @@ export default class AutoBoard extends TourBoard {
             this.drawBoard([...this.getValidMoves(this.state.knightPos)]);
         }
     }
-    handleClick = () => {}
+
+    handleClick = () => {
+    }
+    handleReset = () => {
+        this.setState({
+            knightPos: this.props.knight,
+            traversed: [],
+            checked: false,
+        });
+        clearTimeout(this.t);
+    }
     handleStep = () => {
         console.log((this.props.width * this.props.height) - this.state.traversed.length);
-        if (this.state.traversed.length !== this.props.width * this.props.height - 1) {
+        if (this.state.traversed.length !== this.props.width * this.props.height) {
             let moves = this.getValidMoves(this.state.knightPos);
             if (moves.length !== 0) {
                 this.setState(prevState => ({
@@ -59,7 +71,6 @@ export default class AutoBoard extends TourBoard {
             clearTimeout(this.t);
         }
     }
-
     chooseLeastAccess = (moves) => {
         let leastAccess = 8;
         let smallestMoves = [];
@@ -72,14 +83,14 @@ export default class AutoBoard extends TourBoard {
                 smallestMoves.push(move);
             }
         }
-        /*if (smallestMoves.length !== 1) {
-            let farthest = -1;
+        if (smallestMoves.length !== 1) {
+            let farthest = Number.MAX_SAFE_INTEGER;
             let farthestMoves = [];
             let center = [(this.props.width - 1) / 2, (this.props.height - 1) / 2];
             for (let move of smallestMoves) {
                 let squareDist = Math.pow(move[0] - center[0], 2) +
                     Math.pow(move[1] - center[1], 2);
-                if (squareDist > farthest) {
+                if (squareDist < farthest) {
                     farthest = squareDist;
                     farthestMoves = [move];
                 } else if (squareDist === farthest) {
@@ -89,9 +100,10 @@ export default class AutoBoard extends TourBoard {
             return farthestMoves[Math.floor(Math.random() * farthestMoves.length)];
         } else {
             return smallestMoves[0];
-        }*/
-        return smallestMoves[Math.floor(Math.random() * smallestMoves.length)];
+        }
+        //return smallestMoves[Math.floor(Math.random() * smallestMoves.length)];
     }
+
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -115,16 +127,16 @@ export default class AutoBoard extends TourBoard {
         }
         this.drawKnight();
     }
+
     drawTravelLine(pos1, pos2) {
         this.ctx.beginPath();
-        this.ctx.moveTo(...this.posToCoords(pos1)
-            .map(c => c + this.state.squareSide / 2));
-        this.ctx.lineTo(...this.posToCoords(pos2)
-            .map(c => c + this.state.squareSide / 2));
+        this.ctx.moveTo(...this.posToCoords(pos1).map(c => c + this.state.squareSide / 2));
+        this.ctx.lineTo(...this.posToCoords(pos2).map(c => c + this.state.squareSide / 2));
         this.ctx.strokeStyle = "#000000";
         this.ctx.lineWidth = 1;
         this.ctx.stroke();
     }
+
     drawAccess(pos) {
         let access = this.getValidMoves(pos).length;
         if (this.state.showAccess && this.isValidMove(pos) && access !== 0) {
@@ -132,7 +144,7 @@ export default class AutoBoard extends TourBoard {
             this.ctx.fillStyle = "black";
             this.ctx.textAlign = "center";
             this.ctx.textBaseline = 'middle';
-            let coords = this.posToCoords(pos).map(c => (c + this.state.squareSide / 2));
+            let coords = this.posToCoords(pos).map(c => c + this.state.squareSide / 2);
             this.ctx.fillText(this.getValidMoves(pos).length.toString(), ...coords);
         } else {
             let lengthFactor = 0.65;
@@ -145,15 +157,17 @@ export default class AutoBoard extends TourBoard {
                 this.state.squareSide * lengthFactor, this.state.squareSide * lengthFactor);
         }
     }
+
     render() {
         return (
             <div>
                 <div>
-                    <canvas id={"canvas" + this.props.id}
-                            width={this.props.width * this.state.squareSide}
-                            height={this.props.height * this.state.squareSide}
-                            ref={this.setContext}
-                            onClick={this.handleClick} />
+                    <canvas
+                        id={"canvas" + this.props.id}
+                        width={this.props.width * this.state.squareSide}
+                        height={this.props.height * this.state.squareSide}
+                        ref={this.setContext}
+                        onClick={this.handleClick}/>
                 </div>
                 <div>
                     <Button
@@ -162,12 +176,12 @@ export default class AutoBoard extends TourBoard {
                     <Button
                         variant="outlined"
                         onClick={this.handleStep}>Step</Button>
-                    <Button
-                        variant="outlined"
-                        onClick={this.handleAccess}>Show Accessibility</Button>
                     <FormControlLabel
-                        control={<Switch checked={this.state.checked} onChange={this.handleSwitch} />}
-                        label="Keep going" />
+                        control={<Switch checked={this.state.showAccess} onChange={this.handleAccess}/>}
+                        label="Show accessibility"/>
+                    <FormControlLabel
+                        control={<Switch checked={this.state.checked} onChange={this.handleSwitch}/>}
+                        label="Auto-solve"/>
                 </div>
             </div>
         );
