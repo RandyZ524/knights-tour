@@ -1,33 +1,33 @@
 import TourBoard from './TourBoard';
 import Button from "@material-ui/core/Button";
 import React from "react";
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 
 export default class AutoBoard extends TourBoard {
     constructor(props) {
         super(props);
         this.state["showAccess"] = this.props.defaultAccess;
+        this.state["checked"] = false;
         this.t = undefined;
-        this.start = 500;
         this.repeat = this.repeat.bind(this);
-        this.onMouseDown = this.onMouseDown.bind(this);
-        this.onMouseUp = this.onMouseUp.bind(this);
     }
     repeat() {
-        if (this.handleStep()) {
-            if (this.start === 1) {
-                this.t = setTimeout(this.repeat, 0);
-            } else {
-                this.t = setTimeout(this.repeat, this.start);
-                this.start = Math.max(this.start * 0.9, 1);
-            }
+        if (this.handleStep() && this.handleStep()) {
+            this.t = setTimeout(this.repeat, 0);
         }
     }
-    onMouseUp() {
-        this.t = setTimeout(this.repeat, 500);
-    }
-    onMouseDown() {
-        clearTimeout(this.t);
-        this.start = 500;
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.posEqual(this.state.knightPos, this.props.knight)) {
+            this.drawBoard();
+        }
+        if (!this.posEqual(this.state.knightPos, prevState.knightPos)) {
+            this.drawBoard([this.state.knightPos, prevState.knightPos,
+                ...this.getValidMoves(this.state.knightPos),
+                ...this.getValidMoves(prevState.knightPos)]);
+        } else if (this.state.showAccess !== prevState.showAccess) {
+            this.drawBoard([...this.getValidMoves(this.state.knightPos)]);
+        }
     }
     handleClick = () => {}
     handleStep = () => {
@@ -45,10 +45,21 @@ export default class AutoBoard extends TourBoard {
         return false;
     }
     handleAccess = () => {
-        this.setState(prevState => ({
-            showAccess: !prevState.showAccess,
-        }));
+        this.setState({
+            showAccess: !this.state.showAccess,
+        });
     }
+    handleSwitch = () => {
+        this.setState({
+            checked: !this.state.checked,
+        });
+        if (!this.state.checked) {
+            this.repeat();
+        } else {
+            clearTimeout(this.t);
+        }
+    }
+
     chooseLeastAccess = (moves) => {
         let leastAccess = 8;
         let smallestMoves = [];
@@ -81,47 +92,66 @@ export default class AutoBoard extends TourBoard {
         }*/
         return smallestMoves[Math.floor(Math.random() * smallestMoves.length)];
     }
-    drawBoard() {
-        for (let i = 0; i < this.props.width; i++) {
-            for (let j = 0; j < this.props.height; j++) {
-                this.drawSquare([i, j]);
-                if (this.state.showAccess && this.isValidMove([i, j])) {
+    drawBoard(redraw = []) {
+        if (redraw.length === 0) {
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+            for (let i = 0; i < this.props.width; i++) {
+                for (let j = 0; j < this.props.height; j++) {
+                    this.drawSquare([i, j]);
                     this.drawAccess([i, j]);
                 }
             }
+        } else {
+            for (let pos of redraw) {
+                this.drawAccess(pos);
+            }
+            if (this.state.traversed.length !== 0) {
+                this.drawTravelLine(this.state.knightPos, this.intToIndex(this.state.traversed[0]));
+                if (this.state.traversed.length !== 1) {
+                    this.drawTravelLine(this.intToIndex(this.state.traversed[1]),
+                        this.intToIndex(this.state.traversed[0]));
+                }
+            }
         }
-        let cur = this.state.knightPos;
-        for (let next of this.state.traversed) {
-            let nextIndex = this.intToIndex(next);
-            this.ctx.beginPath();
-            this.ctx.moveTo(...this.posToCoords(cur).map(c => c + this.state.squareSide / 2));
-            this.ctx.lineTo(...this.posToCoords(nextIndex).map(c => c + this.state.squareSide / 2));
-            this.ctx.strokeStyle = "#000000";
-            this.ctx.lineWidth = 1;
-            this.ctx.stroke();
-            cur = nextIndex;
-        }
-        if (this.knightImg.complete) {
-            this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
-                this.state.squareSide, this.state.squareSide);
-        }
+        this.drawKnight();
+    }
+    drawTravelLine(pos1, pos2) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(...this.posToCoords(pos1)
+            .map(c => c + this.state.squareSide / 2));
+        this.ctx.lineTo(...this.posToCoords(pos2)
+            .map(c => c + this.state.squareSide / 2));
+        this.ctx.strokeStyle = "#000000";
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
     }
     drawAccess(pos) {
-        this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
-        this.ctx.fillStyle = "black";
-        this.ctx.textAlign = "center";
-        this.ctx.textBaseline = 'middle';
-        let coords = [this.posToCoords(pos)[0] + this.state.squareSide / 2,
-            this.posToCoords(pos)[1] + this.state.squareSide / 2];
-        this.ctx.fillText(this.getValidMoves(pos).length.toString(), ...coords);
+        let access = this.getValidMoves(pos).length;
+        if (this.state.showAccess && this.isValidMove(pos) && access !== 0) {
+            this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
+            this.ctx.fillStyle = "black";
+            this.ctx.textAlign = "center";
+            this.ctx.textBaseline = 'middle';
+            let coords = this.posToCoords(pos).map(c => (c + this.state.squareSide / 2));
+            this.ctx.fillText(this.getValidMoves(pos).length.toString(), ...coords);
+        } else {
+            let lengthFactor = 0.65;
+            let distFromEdge = (1 - lengthFactor) / 2;
+            let coords = this.posToCoords(pos)
+                .map(c => (c + this.state.squareSide * distFromEdge));
+            this.ctx.beginPath();
+            this.ctx.fillStyle = (pos[0] + pos[1]) % 2 === 0 ? '#f0d9b5' : '#b58863';
+            this.ctx.fillRect(...coords,
+                this.state.squareSide * lengthFactor, this.state.squareSide * lengthFactor);
+        }
     }
     render() {
         return (
             <div>
                 <div>
                     <canvas id={"canvas" + this.props.id}
-                            width={500}
-                            height={500}
+                            width={this.props.width * this.state.squareSide}
+                            height={this.props.height * this.state.squareSide}
                             ref={this.setContext}
                             onClick={this.handleClick} />
                 </div>
@@ -131,12 +161,13 @@ export default class AutoBoard extends TourBoard {
                         onClick={this.handleReset}>Reset</Button>
                     <Button
                         variant="outlined"
-                        onClick={this.handleStep}
-                        onMouseUp={this.onMouseUp}
-                        onMouseDown={this.onMouseDown}>Step</Button>
+                        onClick={this.handleStep}>Step</Button>
                     <Button
                         variant="outlined"
                         onClick={this.handleAccess}>Show Accessibility</Button>
+                    <FormControlLabel
+                        control={<Switch checked={this.state.checked} onChange={this.handleSwitch} />}
+                        label="Keep going" />
                 </div>
             </div>
         );

@@ -72,8 +72,8 @@ export default class TourBoard extends Board {
             <div>
                 <div>
                     <canvas id={"canvas" + this.props.id}
-                        width={500}
-                        height={500}
+                        width={this.props.width * this.state.squareSide}
+                        height={this.props.height * this.state.squareSide}
                         ref={this.setContext}
                         onClick={(e) => this.handleClick(e)} />
                 </div>

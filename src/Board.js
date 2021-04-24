@@ -73,20 +73,23 @@ export default class Board extends React.Component {
         }
         return moves;
     }
-    drawTemp = () => {
+    drawTemp() {
         let temp = new Image(this.state.squareSide, this.state.squareSide);
         temp.src = process.env.PUBLIC_URL + "knight.png";
-        let coords = this.posToCoords(this.state.knightPos);
+        let lengthFactor = 0.64;
+        let distFromEdge = (1 - lengthFactor) / 2;
+        let coords = this.posToCoords(this.state.knightPos)
+                .map(c => c + this.state.squareSide * distFromEdge);
         let ctxRef = this.ctx;
-        let squareRef = this.state.squareSide;
+        let squareLength = this.state.squareSide * lengthFactor;
         temp.onload = function() {
             ctxRef.drawImage(temp, ...coords,
-                squareRef, squareRef);
+                squareLength, squareLength);
         }
     }
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
-            this.ctx.clearRect(0, 0, 500, 500);
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             for (let i = 0; i < this.props.width; i++) {
                 for (let j = 0; j < this.props.height; j++) {
                     this.drawSquare([i, j]);
@@ -96,25 +99,32 @@ export default class Board extends React.Component {
             this.drawSquare(pos);
             this.drawValid(pos);
         }
-        if (this.knightImg.complete) {
-            this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
-                this.state.squareSide, this.state.squareSide);
-        }
+        this.drawKnight();
     }
-    drawSquare = (pos) => {
+    drawSquare(pos) {
         let color = this.getColor(pos);
         let coords = this.posToCoords(pos);
         this.ctx.beginPath();
         this.ctx.fillStyle = color;
         this.ctx.fillRect(...coords, this.state.squareSide, this.state.squareSide);
     }
-    drawValid = (pos) => {
+    drawValid(pos) {
         if (this.state.clicked && this.isValidMove(pos)) {
             this.ctx.beginPath();
             this.ctx.fillStyle = (pos[0] + pos[1]) % 2 === 0 ? '#819769' : '#646c44';
             this.ctx.arc(...this.posToCoords(pos).map(c => c + this.state.squareSide / 2),
                 this.state.squareSide / 7, 0, 2 * Math.PI);
             this.ctx.fill();
+        }
+    }
+    drawKnight() {
+        if (this.knightImg.complete) {
+            let lengthFactor = 0.64;
+            let distFromEdge = (1 - lengthFactor) / 2;
+            this.ctx.drawImage(this.knightImg,
+                ...this.posToCoords(this.state.knightPos)
+                    .map(c => c + this.state.squareSide * distFromEdge),
+                this.state.squareSide * lengthFactor, this.state.squareSide * lengthFactor);
         }
     }
     posToCoords = (pos) => {
@@ -142,8 +152,8 @@ export default class Board extends React.Component {
         return (
             <div>
                 <canvas id={"canvas" + this.props.id}
-                    width={500}
-                    height={500}
+                    width={this.props.width * this.state.squareSide}
+                    height={this.props.height * this.state.squareSide}
                     ref={this.setContext}
                     onClick={(e) => this.handleClick(e)} />
             </div>

@@ -54,7 +54,7 @@ function App() {
             width={8} height={8} knight={[0, 0]}/>
         <AutoBoard
             id={5}
-            width={150} height={150} knight={[0, 0]}/>
+            width={100} height={100} knight={[0, 0]}/>
     </div>
   );
 }

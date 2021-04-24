@@ -20,6 +20,7 @@ export default class ExampleBoard extends Board {
     }
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
+            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             for (let i = 0; i < this.props.width; i++) {
                 for (let j = 0; j < this.props.height; j++) {
                     this.drawSquare([i, j]);
@@ -30,10 +31,7 @@ export default class ExampleBoard extends Board {
             this.drawSquare(pos);
             this.drawAccess(pos);
         }
-        if (this.knightImg.complete) {
-            this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
-                this.state.squareSide, this.state.squareSide);
-        }
+        this.drawKnight()
     }
     isBottom(el) {
         return el.getBoundingClientRect().bottom <= window.innerHeight;
