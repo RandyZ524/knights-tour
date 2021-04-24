@@ -42,7 +42,7 @@ function App() {
             of the algorithm tiebreaks randomly.
         </p>
         <AutoBoard
-            id={4}
+            id={3}
             width={3} height={4} knight={[0, 0]}
             defaultAccess={true}/>
         <p>
@@ -50,8 +50,11 @@ function App() {
             chessboard.
         </p>
         <AutoBoard
-            id={3}
+            id={4}
             width={8} height={8} knight={[0, 0]}/>
+        <AutoBoard
+            id={5}
+            width={150} height={150} knight={[0, 0]}/>
     </div>
   );
 }

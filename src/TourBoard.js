@@ -20,6 +20,26 @@ export default class TourBoard extends Board {
             return super.getColor(pos);
         }
     }
+    getValidMoves = (pos) => {
+        let moves = [];
+        moves.push([pos[0] - 2, pos[1] - 1]);
+        moves.push([pos[0] + 2, pos[1] - 1]);
+        moves.push([pos[0] - 2, pos[1] + 1]);
+        moves.push([pos[0] + 2, pos[1] + 1]);
+        moves.push([pos[0] - 1, pos[1] - 2]);
+        moves.push([pos[0] + 1, pos[1] - 2]);
+        moves.push([pos[0] - 1, pos[1] + 2]);
+        moves.push([pos[0] + 1, pos[1] + 2]);
+        for (let i = moves.length; i--;) {
+            if (moves[i][0] < 0 || moves[i][0] >= this.props.width ||
+                moves[i][1] < 0 || moves[i][1] >= this.props.height ||
+                this.state.traversed.includes(this.indexToInt(moves[i])) ||
+                this.posEqual(this.state.knightPos, moves[i])) {
+                moves.splice(i, 1);
+            }
+        }
+        return moves;
+    }
     isValidMove = (pos) => {
         if (this.state.traversed.includes(this.indexToInt(pos))) {
             return false;
@@ -45,7 +65,7 @@ export default class TourBoard extends Board {
             knightPos: this.props.knight,
             clicked: false,
             traversed: [],
-        })
+        });
     }
     render() {
         return (

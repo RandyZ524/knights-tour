@@ -6,43 +6,48 @@ export default class AutoBoard extends TourBoard {
     constructor(props) {
         super(props);
         this.state["showAccess"] = this.props.defaultAccess;
+        this.t = undefined;
+        this.start = 500;
+        this.repeat = this.repeat.bind(this);
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+    }
+    repeat() {
+        if (this.handleStep()) {
+            if (this.start === 1) {
+                this.t = setTimeout(this.repeat, 0);
+            } else {
+                this.t = setTimeout(this.repeat, this.start);
+                this.start = Math.max(this.start * 0.9, 1);
+            }
+        }
+    }
+    onMouseUp() {
+        this.t = setTimeout(this.repeat, 500);
+    }
+    onMouseDown() {
+        clearTimeout(this.t);
+        this.start = 500;
     }
     handleClick = () => {}
     handleStep = () => {
+        console.log((this.props.width * this.props.height) - this.state.traversed.length);
         if (this.state.traversed.length !== this.props.width * this.props.height - 1) {
             let moves = this.getValidMoves(this.state.knightPos);
-            if (moves) {
+            if (moves.length !== 0) {
                 this.setState(prevState => ({
                     knightPos: this.chooseLeastAccess(moves),
                     traversed: [this.indexToInt(this.state.knightPos), ...prevState.traversed],
                 }));
+                return true;
             }
         }
+        return false;
     }
     handleAccess = () => {
         this.setState(prevState => ({
             showAccess: !prevState.showAccess,
         }));
-    }
-    getValidMoves = (pos) => {
-        let moves = [];
-        moves.push([pos[0] - 2, pos[1] - 1]);
-        moves.push([pos[0] + 2, pos[1] - 1]);
-        moves.push([pos[0] - 2, pos[1] + 1]);
-        moves.push([pos[0] + 2, pos[1] + 1]);
-        moves.push([pos[0] - 1, pos[1] - 2]);
-        moves.push([pos[0] + 1, pos[1] - 2]);
-        moves.push([pos[0] - 1, pos[1] + 2]);
-        moves.push([pos[0] + 1, pos[1] + 2]);
-        for (let i = moves.length; i--;) {
-            if (moves[i][0] < 0 || moves[i][0] >= this.props.width ||
-                    moves[i][1] < 0 || moves[i][1] >= this.props.height ||
-                    this.state.traversed.includes(this.indexToInt(moves[i])) ||
-                    this.posEqual(this.state.knightPos, moves[i])) {
-                moves.splice(i, 1);
-            }
-        }
-        return moves;
     }
     chooseLeastAccess = (moves) => {
         let leastAccess = 8;
@@ -56,6 +61,24 @@ export default class AutoBoard extends TourBoard {
                 smallestMoves.push(move);
             }
         }
+        /*if (smallestMoves.length !== 1) {
+            let farthest = -1;
+            let farthestMoves = [];
+            let center = [(this.props.width - 1) / 2, (this.props.height - 1) / 2];
+            for (let move of smallestMoves) {
+                let squareDist = Math.pow(move[0] - center[0], 2) +
+                    Math.pow(move[1] - center[1], 2);
+                if (squareDist > farthest) {
+                    farthest = squareDist;
+                    farthestMoves = [move];
+                } else if (squareDist === farthest) {
+                    farthestMoves.push(move);
+                }
+            }
+            return farthestMoves[Math.floor(Math.random() * farthestMoves.length)];
+        } else {
+            return smallestMoves[0];
+        }*/
         return smallestMoves[Math.floor(Math.random() * smallestMoves.length)];
     }
     drawBoard() {
@@ -74,7 +97,7 @@ export default class AutoBoard extends TourBoard {
             this.ctx.moveTo(...this.posToCoords(cur).map(c => c + this.state.squareSide / 2));
             this.ctx.lineTo(...this.posToCoords(nextIndex).map(c => c + this.state.squareSide / 2));
             this.ctx.strokeStyle = "#000000";
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = 1;
             this.ctx.stroke();
             cur = nextIndex;
         }
@@ -108,7 +131,9 @@ export default class AutoBoard extends TourBoard {
                         onClick={this.handleReset}>Reset</Button>
                     <Button
                         variant="outlined"
-                        onClick={this.handleStep}>Step</Button>
+                        onClick={this.handleStep}
+                        onMouseUp={this.onMouseUp}
+                        onMouseDown={this.onMouseDown}>Step</Button>
                     <Button
                         variant="outlined"
                         onClick={this.handleAccess}>Show Accessibility</Button>

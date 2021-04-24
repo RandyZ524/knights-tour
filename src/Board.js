@@ -22,7 +22,17 @@ export default class Board extends React.Component {
         this.drawBoard();
     }
     componentDidUpdate(prevProps, prevState, snapshot) {
-        this.drawBoard();
+        if (this.posEqual(this.state.knightPos, this.props.knight)) {
+            this.drawBoard();
+        }
+        if (this.state.clicked !== prevState.clicked) {
+            this.drawBoard([this.state.knightPos,
+                ...this.getValidMoves(this.state.knightPos)]);
+        } else if (!this.posEqual(this.state.knightPos, prevState.knightPos)) {
+            this.drawBoard([this.state.knightPos, prevState.knightPos,
+                ...this.getValidMoves(this.state.knightPos),
+                ...this.getValidMoves(prevState.knightPos)]);
+        }
     }
     handleClick(e) {
         let clickCoords = this.coordsToPos(this.getMousePos(e));
@@ -44,6 +54,25 @@ export default class Board extends React.Component {
             ((e.clientY - bound.top) / (bound.bottom - bound.top) * canvasRef.height)
         ];
     }
+    getValidMoves = (pos) => {
+        let moves = [];
+        moves.push([pos[0] - 2, pos[1] - 1]);
+        moves.push([pos[0] + 2, pos[1] - 1]);
+        moves.push([pos[0] - 2, pos[1] + 1]);
+        moves.push([pos[0] + 2, pos[1] + 1]);
+        moves.push([pos[0] - 1, pos[1] - 2]);
+        moves.push([pos[0] + 1, pos[1] - 2]);
+        moves.push([pos[0] - 1, pos[1] + 2]);
+        moves.push([pos[0] + 1, pos[1] + 2]);
+        for (let i = moves.length; i--;) {
+            if (moves[i][0] < 0 || moves[i][0] >= this.props.width ||
+                moves[i][1] < 0 || moves[i][1] >= this.props.height ||
+                this.posEqual(this.state.knightPos, moves[i])) {
+                moves.splice(i, 1);
+            }
+        }
+        return moves;
+    }
     drawTemp = () => {
         let temp = new Image(this.state.squareSide, this.state.squareSide);
         temp.src = process.env.PUBLIC_URL + "knight.png";
@@ -55,14 +84,17 @@ export default class Board extends React.Component {
                 squareRef, squareRef);
         }
     }
-    drawBoard() {
-        for (let i = 0; i < this.props.width; i++) {
-            for (let j = 0; j < this.props.height; j++) {
-                this.drawSquare([i, j]);
-                if (this.state.clicked && this.isValidMove([i, j])) {
-                    this.drawValid([i, j]);
+    drawBoard(redraw = []) {
+        if (redraw.length === 0) {
+            this.ctx.clearRect(0, 0, 500, 500);
+            for (let i = 0; i < this.props.width; i++) {
+                for (let j = 0; j < this.props.height; j++) {
+                    this.drawSquare([i, j]);
                 }
             }
+        } else for (let pos of redraw) {
+            this.drawSquare(pos);
+            this.drawValid(pos);
         }
         if (this.knightImg.complete) {
             this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
@@ -70,17 +102,20 @@ export default class Board extends React.Component {
         }
     }
     drawSquare = (pos) => {
+        let color = this.getColor(pos);
         let coords = this.posToCoords(pos);
         this.ctx.beginPath();
-        this.ctx.fillStyle = this.getColor(pos);
+        this.ctx.fillStyle = color;
         this.ctx.fillRect(...coords, this.state.squareSide, this.state.squareSide);
     }
     drawValid = (pos) => {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = (pos[0] + pos[1]) % 2 === 0 ? '#819769' : '#646c44';
-        this.ctx.arc(...this.posToCoords(pos).map(c => c + this.state.squareSide / 2),
-            this.state.squareSide / 7, 0, 2 * Math.PI);
-        this.ctx.fill();
+        if (this.state.clicked && this.isValidMove(pos)) {
+            this.ctx.beginPath();
+            this.ctx.fillStyle = (pos[0] + pos[1]) % 2 === 0 ? '#819769' : '#646c44';
+            this.ctx.arc(...this.posToCoords(pos).map(c => c + this.state.squareSide / 2),
+                this.state.squareSide / 7, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
     }
     posToCoords = (pos) => {
         return pos.map(i => i * this.state.squareSide);

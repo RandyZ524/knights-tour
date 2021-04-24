@@ -7,49 +7,32 @@ export default class ExampleBoard extends Board {
         }
     }
     drawAccess(pos) {
-        this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
-        this.ctx.fillStyle = "black";
-        this.ctx.textAlign = "center";
-        this.ctx.textBaseline = 'middle';
-        let coords = [this.posToCoords(pos)[0] + this.state.squareSide / 2,
-            this.posToCoords(pos)[1] + this.state.squareSide / 2];
-        this.ctx.fillText(this.getValidMoves(pos).length.toString(), ...coords);
-    }
-    getValidMoves = (pos) => {
-        let moves = [];
-        moves.push([pos[0] - 2, pos[1] - 1]);
-        moves.push([pos[0] + 2, pos[1] - 1]);
-        moves.push([pos[0] - 2, pos[1] + 1]);
-        moves.push([pos[0] + 2, pos[1] + 1]);
-        moves.push([pos[0] - 1, pos[1] - 2]);
-        moves.push([pos[0] + 1, pos[1] - 2]);
-        moves.push([pos[0] - 1, pos[1] + 2]);
-        moves.push([pos[0] + 1, pos[1] + 2]);
-        for (let i = moves.length; i--;) {
-            if (moves[i][0] < 0 || moves[i][0] >= this.props.height ||
-                moves[i][1] < 0 || moves[i][1] >= this.props.width ||
-                this.posEqual(this.state.knightPos, moves[i])) {
-                moves.splice(i, 1);
-            }
+        let access = this.getValidMoves(pos).length;
+        if (this.props.showAccess && this.isValidMove(pos) && access !== 0) {
+            this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
+            this.ctx.fillStyle = "black";
+            this.ctx.textAlign = "center";
+            this.ctx.textBaseline = 'middle';
+            let coords = [this.posToCoords(pos)[0] + this.state.squareSide / 2,
+                this.posToCoords(pos)[1] + this.state.squareSide / 2];
+            this.ctx.fillText(access.toString(), ...coords);
         }
-        return moves;
     }
-    drawBoard() {
-        if (this.props.showAccess) {
+    drawBoard(redraw = []) {
+        if (redraw.length === 0) {
             for (let i = 0; i < this.props.width; i++) {
                 for (let j = 0; j < this.props.height; j++) {
                     this.drawSquare([i, j]);
-                    if (this.isValidMove([i, j])) {
-                        this.drawAccess([i, j]);
-                    }
+                    this.drawAccess([i, j]);
                 }
             }
-            if (this.knightImg.complete) {
-                this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
-                    this.state.squareSide, this.state.squareSide);
-            }
-        } else {
-            super.drawBoard();
+        } else for (let pos of redraw) {
+            this.drawSquare(pos);
+            this.drawAccess(pos);
+        }
+        if (this.knightImg.complete) {
+            this.ctx.drawImage(this.knightImg, ...this.posToCoords(this.state.knightPos),
+                this.state.squareSide, this.state.squareSide);
         }
     }
     isBottom(el) {
