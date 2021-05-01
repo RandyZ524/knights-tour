@@ -5,8 +5,8 @@ export default class Board extends React.Component {
         super(props);
         this.state = {
             squareSide: Math.min(
-                500 / this.props.height,
-                500 / this.props.width),
+                500 / this.props.width,
+                500 / this.props.height),
             knightPos: this.props.knight,
             clicked: false,
         };
@@ -123,7 +123,7 @@ export default class Board extends React.Component {
     }
     drawKnight() {
         if (this.knightImg.complete) {
-            let lengthFactor = 0.64;
+            let lengthFactor = 0.635;
             let distFromEdge = (1 - lengthFactor) / 2;
             this.ctx.drawImage(this.knightImg,
                 ...this.posToCoords(this.state.knightPos)

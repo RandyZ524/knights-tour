@@ -8,15 +8,14 @@ export default class ExampleBoard extends Board {
     }
 
     drawAccess(pos) {
-        let access = this.getValidMoves(pos).length;
-        if (this.props.showAccess && this.isValidMove(pos) && access !== 0) {
+        if (this.props.showAccess && this.isValidMove(pos)) {
             this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
             this.ctx.fillStyle = "black";
             this.ctx.textAlign = "center";
             this.ctx.textBaseline = 'middle';
             let coords = [this.posToCoords(pos)[0] + this.state.squareSide / 2,
                 this.posToCoords(pos)[1] + this.state.squareSide / 2];
-            this.ctx.fillText(access.toString(), ...coords);
+            this.ctx.fillText(this.getValidMoves(pos).length.toString(), ...coords);
         }
     }
 

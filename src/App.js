@@ -17,7 +17,7 @@ function App() {
             </p>
             <ExampleBoard
                 id={0}
-                width={5} height={5}
+                width={5} height={4}
                 knight={[1, 1]} knightTo={[3, 2]}
                 scrolling={true}/>
             <p>
@@ -38,7 +38,7 @@ function App() {
             </p>
             <ExampleBoard
                 id={2}
-                width={5} height={5} knight={[1, 2]}
+                width={5} height={4} knight={[1, 1]}
                 showAccess={true} movable={true}/>
             <p>
                 The algorithm is very simple: at each step, calculate the accessibility of every square that can be
@@ -60,7 +60,8 @@ function App() {
                 width={8} height={8} knight={[0, 0]}/>
             <AutoBoard
                 id={5}
-                width={100} height={100} knight={[0, 0]}/>
+                width={100} height={100} knight={[0, 0]}
+                modifiable={true}/>
         </div>
     );
 }

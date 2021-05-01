@@ -3,6 +3,7 @@ import Button from "@material-ui/core/Button";
 import React from "react";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+import {TextField} from "@material-ui/core";
 
 export default class AutoBoard extends TourBoard {
     constructor(props) {
@@ -10,17 +11,12 @@ export default class AutoBoard extends TourBoard {
         this.state["showAccess"] = this.props.defaultAccess;
         this.state["checked"] = false;
         this.t = undefined;
-        this.repeat = this.repeat.bind(this);
-    }
-
-    repeat() {
-        if (this.handleStep() && this.handleStep()) {
-            this.t = setTimeout(this.repeat, 0);
-        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.posEqual(this.state.knightPos, this.props.knight)) {
+        if (this.posEqual(this.state.knightPos, this.props.knight) ||
+            this.state.currWidth !== prevState.currWidth ||
+            this.state.currHeight !== prevState.currHeight) {
             this.drawBoard();
         }
         if (!this.posEqual(this.state.knightPos, prevState.knightPos)) {
@@ -44,7 +40,7 @@ export default class AutoBoard extends TourBoard {
     }
     handleStep = () => {
         console.log((this.props.width * this.props.height) - this.state.traversed.length);
-        if (this.state.traversed.length !== this.props.width * this.props.height) {
+        if (this.state.traversed.length !== this.state.currWidth * this.state.currHeight) {
             let moves = this.getValidMoves(this.state.knightPos);
             if (moves.length !== 0) {
                 this.setState(prevState => ({
@@ -62,13 +58,56 @@ export default class AutoBoard extends TourBoard {
         });
     }
     handleSwitch = () => {
+        const repeat = () => {
+            if (!this.handleStep()) {
+                clearInterval(this.t);
+            }
+        }
         this.setState({
             checked: !this.state.checked,
         });
         if (!this.state.checked) {
-            this.repeat();
+            let timeout = 5000 / (this.state.currWidth * this.state.currHeight);
+            if (timeout < 1) {
+                timeout = 0;
+            }
+            repeat();
+            this.t = setInterval(() => repeat(), timeout);
         } else {
-            clearTimeout(this.t);
+            clearInterval(this.t);
+        }
+    }
+    handleWidth = (e) => {
+        if (e.target.value !== "") {
+            if (e.target.value < 1) {
+                e.target.value = 1;
+            } else if (e.target.value > 200) {
+                e.target.value = 200;
+            }
+            if (e.target.value >= 1 && e.target.value <= 200) {
+                this.setState({
+                    currWidth: e.target.value,
+                    squareSide: Math.min(
+                        500 / e.target.value, 500 / this.state.currHeight),
+                });
+                this.handleReset();
+            }
+        }
+    }
+    handleHeight = (e) => {
+        if (e.target.value !== "") {
+            if (e.target.value < 1) {
+                e.target.value = 1;
+            } else if (e.target.value > 200) {
+                e.target.value = 200;
+            } else if (e.target.value >= 1 && e.target.value <= 200) {
+                this.setState({
+                    currHeight: e.target.value,
+                    squareSide: Math.min(
+                        500 / this.state.currWidth, 500 / e.target.value),
+                });
+                this.handleReset();
+            }
         }
     }
     chooseLeastAccess = (moves) => {
@@ -84,13 +123,13 @@ export default class AutoBoard extends TourBoard {
             }
         }
         if (smallestMoves.length !== 1) {
-            let farthest = Number.MAX_SAFE_INTEGER;
+            let farthest = -1;
             let farthestMoves = [];
             let center = [(this.props.width - 1) / 2, (this.props.height - 1) / 2];
             for (let move of smallestMoves) {
                 let squareDist = Math.pow(move[0] - center[0], 2) +
                     Math.pow(move[1] - center[1], 2);
-                if (squareDist < farthest) {
+                if (squareDist > farthest) {
                     farthest = squareDist;
                     farthestMoves = [move];
                 } else if (squareDist === farthest) {
@@ -107,8 +146,9 @@ export default class AutoBoard extends TourBoard {
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            for (let i = 0; i < this.props.width; i++) {
-                for (let j = 0; j < this.props.height; j++) {
+            console.log(this.state.currWidth);
+            for (let i = 0; i < this.state.currWidth; i++) {
+                for (let j = 0; j < this.state.currHeight; j++) {
                     this.drawSquare([i, j]);
                     this.drawAccess([i, j]);
                 }
@@ -138,8 +178,7 @@ export default class AutoBoard extends TourBoard {
     }
 
     drawAccess(pos) {
-        let access = this.getValidMoves(pos).length;
-        if (this.state.showAccess && this.isValidMove(pos) && access !== 0) {
+        if (this.state.showAccess && this.isValidMove(pos)) {
             this.ctx.font = (this.state.squareSide / 2).toString() + "px Arial";
             this.ctx.fillStyle = "black";
             this.ctx.textAlign = "center";
@@ -161,11 +200,23 @@ export default class AutoBoard extends TourBoard {
     render() {
         return (
             <div>
+                {this.props.modifiable &&
+                <TextField
+                    type="number" id="standard-number"
+                    label="Set width"
+                    defaultValue={this.props.width}
+                    onInput={this.handleWidth}/>}
+                {this.props.modifiable &&
+                <TextField
+                    type="number" id="standard-number"
+                    label="Set height"
+                    defaultValue={this.props.height}
+                    onInput={this.handleHeight}/>}
                 <div>
                     <canvas
                         id={"canvas" + this.props.id}
-                        width={this.props.width * this.state.squareSide}
-                        height={this.props.height * this.state.squareSide}
+                        width={this.state.currWidth * this.state.squareSide}
+                        height={this.state.currHeight * this.state.squareSide}
                         ref={this.setContext}
                         onClick={this.handleClick}/>
                 </div>

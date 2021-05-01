@@ -6,24 +6,27 @@ export default class TourBoard extends Board {
     constructor(props) {
         super(props);
         this.state["traversed"] = [];
+        this.state["currWidth"] = this.props.width;
+        this.state["currHeight"] = this.props.height;
     }
 
     indexToInt = (pos) => {
-        return pos[1] * this.props.width + pos[0];
+        return pos[1] * this.state.currWidth + pos[0];
     }
     intToIndex = (int) => {
-        return [(int % this.props.width), Math.floor(int / this.props.width)];
+        return [(int % this.state.currWidth), Math.floor(int / this.state.currWidth)];
     }
 
     getColor(pos) {
-        return this.state.traversed.includes(this.indexToInt(pos)) ? '#ffffff' : super.getColor(pos);
+        return this.state.traversed.includes(
+            this.indexToInt(pos)) ? '#ffffff' : super.getColor(pos);
     }
 
     getValidMoves = (pos) => {
         let moves = this.getPossibleMoves(pos);
         for (let i = moves.length; i--;) {
-            if (moves[i][0] < 0 || moves[i][0] >= this.props.width ||
-                moves[i][1] < 0 || moves[i][1] >= this.props.height ||
+            if (moves[i][0] < 0 || moves[i][0] >= this.state.currWidth ||
+                moves[i][1] < 0 || moves[i][1] >= this.state.currHeight ||
                 this.state.traversed.includes(this.indexToInt(moves[i])) ||
                 this.posEqual(this.state.knightPos, moves[i])) {
                 moves.splice(i, 1);
@@ -61,8 +64,8 @@ export default class TourBoard extends Board {
                 <div>
                     <canvas
                         id={"canvas" + this.props.id}
-                        width={this.props.width * this.state.squareSide}
-                        height={this.props.height * this.state.squareSide}
+                        width={this.state.currWidth * this.state.squareSide}
+                        height={this.state.currHeight * this.state.squareSide}
                         ref={this.setContext}
                         onClick={(e) => this.handleClick(e)}/>
                 </div>
