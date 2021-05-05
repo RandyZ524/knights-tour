@@ -4,12 +4,19 @@ import React from "react";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import {TextField} from "@material-ui/core";
+import {basic, center, mouse} from './Tiebreakers';
 
 export default class AutoBoard extends TourBoard {
     constructor(props) {
         super(props);
         this.state["showAccess"] = this.props.defaultAccess;
         this.state["checked"] = false;
+        this.state["currMouse"] = [0, 0];
+        this.state["tiebreaker"] = {
+            extreme: "to the farthest point",
+            dist: "Euclidean",
+            point: "center",
+        };
         this.t = undefined;
     }
 
@@ -28,8 +35,14 @@ export default class AutoBoard extends TourBoard {
         }
     }
 
-    handleClick = () => {
+    handleClick = () => {}
+
+    handleMove = (e) => {
+        this.setState({
+            currMouse: this.coordsToPos(this.getMousePos(e)),
+        });
     }
+
     handleReset = () => {
         this.setState({
             knightPos: this.props.knight,
@@ -38,13 +51,24 @@ export default class AutoBoard extends TourBoard {
         });
         clearTimeout(this.t);
     }
+
     handleStep = () => {
-        console.log((this.props.width * this.props.height) - this.state.traversed.length);
+        console.log((this.state.currWidth * this.state.currHeight) - this.state.traversed.length);
         if (this.state.traversed.length !== this.state.currWidth * this.state.currHeight) {
             let moves = this.getValidMoves(this.state.knightPos);
+            let tiebreaker = undefined;
+            if (this.state.tiebreaker.extreme === "randomly") {
+                tiebreaker = basic();
+            } else if (this.state.tiebreaker.point === "center") {
+                tiebreaker = center(this.state.currWidth, this.state.currHeight,
+                    this.state.tiebreaker.extreme, this.state.tiebreaker.dist);
+            } else {
+                tiebreaker = mouse(this.state.currWidth, this.state.currHeight,
+                    this.state.tiebreaker.extreme, this.state.tiebreaker.dist, this.state.currMouse);
+            }
             if (moves.length !== 0) {
                 this.setState(prevState => ({
-                    knightPos: this.chooseLeastAccess(moves),
+                    knightPos: this.chooseLeastAccess(moves, tiebreaker),
                     traversed: [this.indexToInt(this.state.knightPos), ...prevState.traversed],
                 }));
                 return true;
@@ -52,20 +76,22 @@ export default class AutoBoard extends TourBoard {
         }
         return false;
     }
+
     handleAccess = () => {
-        this.setState({
-            showAccess: !this.state.showAccess,
-        });
+        this.setState(prevState => ({
+            showAccess: !prevState.showAccess,
+        }));
     }
+
     handleSwitch = () => {
         const repeat = () => {
             if (!this.handleStep()) {
                 clearInterval(this.t);
             }
         }
-        this.setState({
-            checked: !this.state.checked,
-        });
+        this.setState(prevState => ({
+            checked: !prevState.checked,
+        }));
         if (!this.state.checked) {
             let timeout = 5000 / (this.state.currWidth * this.state.currHeight);
             if (timeout < 1) {
@@ -77,6 +103,7 @@ export default class AutoBoard extends TourBoard {
             clearInterval(this.t);
         }
     }
+
     handleWidth = (e) => {
         if (e.target.value !== "") {
             if (e.target.value < 1) {
@@ -94,6 +121,7 @@ export default class AutoBoard extends TourBoard {
             }
         }
     }
+
     handleHeight = (e) => {
         if (e.target.value !== "") {
             if (e.target.value < 1) {
@@ -110,7 +138,62 @@ export default class AutoBoard extends TourBoard {
             }
         }
     }
-    chooseLeastAccess = (moves) => {
+
+    handleExtreme = () => {
+        let next = undefined;
+        switch (this.state.tiebreaker.extreme) {
+            case "randomly":
+                next = "to the farthest point";
+                break;
+            case "to the farthest point":
+                next = "to the closest point";
+                break;
+            case "to the closest point":
+                next = "randomly";
+                break;
+            default:
+                break;
+        }
+        this.setState(prevState => ({
+            tiebreaker: {...prevState.tiebreaker, extreme: next}
+        }));
+    }
+
+    handleDistance = () => {
+        let next = undefined;
+        switch (this.state.tiebreaker.dist) {
+            case "Euclidean":
+                next = "Manhattan";
+                break;
+            case "Manhattan":
+                next = "Euclidean";
+                break;
+            default:
+                break;
+        }
+        this.setState(prevState => ({
+            tiebreaker: {...prevState.tiebreaker, dist: next}
+        }));
+    }
+
+    handlePoint = () => {
+        let next = undefined;
+        switch (this.state.tiebreaker.point) {
+            case "center":
+                next = "current mouse position";
+                break;
+            case "current mouse position":
+                next = "center";
+                break;
+            default:
+                break;
+        }
+        this.setState(prevState => ({
+            tiebreaker: {...prevState.tiebreaker, point: next}
+        }));
+    }
+
+    chooseLeastAccess = (moves, tiebreaker) => {
         let leastAccess = 8;
         let smallestMoves = [];
         for (let move of moves) {
@@ -123,30 +206,15 @@ export default class AutoBoard extends TourBoard {
             }
         }
         if (smallestMoves.length !== 1) {
-            let farthest = -1;
-            let farthestMoves = [];
-            let center = [(this.props.width - 1) / 2, (this.props.height - 1) / 2];
-            for (let move of smallestMoves) {
-                let squareDist = Math.pow(move[0] - center[0], 2) +
-                    Math.pow(move[1] - center[1], 2);
-                if (squareDist > farthest) {
-                    farthest = squareDist;
-                    farthestMoves = [move];
-                } else if (squareDist === farthest) {
-                    farthestMoves.push(move);
-                }
-            }
-            return farthestMoves[Math.floor(Math.random() * farthestMoves.length)];
+            return tiebreaker(smallestMoves, this.state.currWidth, this.state.currHeight);
         } else {
             return smallestMoves[0];
         }
-        //return smallestMoves[Math.floor(Math.random() * smallestMoves.length)];
     }
 
     drawBoard(redraw = []) {
         if (redraw.length === 0) {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            console.log(this.state.currWidth);
             for (let i = 0; i < this.state.currWidth; i++) {
                 for (let j = 0; j < this.state.currHeight; j++) {
                     this.drawSquare([i, j]);
@@ -200,25 +268,38 @@ export default class AutoBoard extends TourBoard {
     render() {
         return (
             <div>
-                {this.props.modifiable &&
+                {this.props.dimenModifiable &&
                 <TextField
-                    type="number" id="standard-number"
-                    label="Set width"
+                    type="number" label="Set width"
                     defaultValue={this.props.width}
                     onInput={this.handleWidth}/>}
-                {this.props.modifiable &&
+                {this.props.dimenModifiable &&
                 <TextField
-                    type="number" id="standard-number"
-                    label="Set height"
+                    type="number" label="Set height"
                     defaultValue={this.props.height}
                     onInput={this.handleHeight}/>}
+                {this.props.tieModifiable &&
+                <div className="Inline-dropdown">
+                    <p>Ties are awarded </p>
+                    <u onClick={this.handleExtreme}>{this.state.tiebreaker.extreme}</u>
+                    {this.state.tiebreaker.extreme !== "randomly" && this.props.tieModifiable &&
+                        <p> by </p>}
+                    {this.state.tiebreaker.extreme !== "randomly" && this.props.tieModifiable &&
+                        <u onClick={this.handleDistance}>{this.state.tiebreaker.dist}</u>}
+                    {this.state.tiebreaker.extreme !== "randomly" && this.props.tieModifiable &&
+                        <p> distance relative to the </p>}
+                    {this.state.tiebreaker.extreme !== "randomly" && this.props.tieModifiable &&
+                        <u onClick={this.handlePoint}>{this.state.tiebreaker.point}</u>}
+                    <p>.</p>
+                </div>}
                 <div>
                     <canvas
                         id={"canvas" + this.props.id}
                         width={this.state.currWidth * this.state.squareSide}
                         height={this.state.currHeight * this.state.squareSide}
                         ref={this.setContext}
-                        onClick={this.handleClick}/>
+                        onClick={this.handleClick}
+                        onMouseMove={this.handleMove}/>
                 </div>
                 <div>
                     <Button

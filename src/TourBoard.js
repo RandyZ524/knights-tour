@@ -40,12 +40,12 @@ export default class TourBoard extends Board {
     handleClick = (e) => {
         let clickCoords = this.coordsToPos(this.getMousePos(e));
         if (this.posEqual(this.state.knightPos, clickCoords)) {
-            this.setState({
-                clicked: !this.state.clicked,
-            });
+            this.setState(prevState => ({
+                clicked: !prevState.clicked,
+            }));
         } else if (this.state.clicked && this.isValidMove(clickCoords)) {
             this.setState(prevState => ({
-                traversed: [this.indexToInt(this.state.knightPos), ...prevState.traversed],
+                traversed: [this.indexToInt(prevState.knightPos), ...prevState.traversed],
                 knightPos: clickCoords,
             }));
         }

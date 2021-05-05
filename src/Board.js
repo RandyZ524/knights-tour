@@ -4,9 +4,7 @@ export default class Board extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            squareSide: Math.min(
-                500 / this.props.width,
-                500 / this.props.height),
+            squareSide: Math.min(500 / this.props.width, 500 / this.props.height),
             knightPos: this.props.knight,
             clicked: false,
         };
@@ -41,9 +39,9 @@ export default class Board extends React.Component {
     handleClick(e) {
         let clickCoords = this.coordsToPos(this.getMousePos(e));
         if (this.posEqual(this.state.knightPos, clickCoords)) {
-            this.setState({
-                clicked: !this.state.clicked,
-            });
+            this.setState(prevState => ({
+                clicked: !prevState.clicked,
+            }));
         } else if (this.state.clicked && this.isValidMove(clickCoords)) {
             this.setState({
                 knightPos: clickCoords,

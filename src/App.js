@@ -58,10 +58,18 @@ function App() {
             <AutoBoard
                 id={4}
                 width={8} height={8} knight={[0, 0]}/>
+            <p>
+                And here's a board you can change the size of. For what square board dimensions is a knight's tour
+                not possible?
+            </p>
             <AutoBoard
                 id={5}
                 width={100} height={100} knight={[0, 0]}
-                modifiable={true}/>
+                dimenModifiable={true}/>
+            <AutoBoard
+                id={5}
+                width={100} height={100} knight={[0, 0]}
+                tieModifiable={true}/>
         </div>
     );
 }
