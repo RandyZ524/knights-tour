@@ -168,3 +168,9 @@ export default class Board extends React.Component {
         );
     }
 }
+
+Board.defaultProps = {
+    knight: [0, 0],
+    width: 8,
+    height: 8,
+}

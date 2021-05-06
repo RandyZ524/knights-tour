@@ -61,19 +61,10 @@ export default class TourBoard extends Board {
     render() {
         return (
             <div>
-                <div>
-                    <canvas
-                        id={"canvas" + this.props.id}
-                        width={this.state.currWidth * this.state.squareSide}
-                        height={this.state.currHeight * this.state.squareSide}
-                        ref={this.setContext}
-                        onClick={(e) => this.handleClick(e)}/>
-                </div>
-                <div>
-                    <Button
-                        variant="outlined"
-                        onClick={this.handleReset}>Reset</Button>
-                </div>
+                {super.render()}
+                <Button
+                    variant="outlined"
+                    onClick={this.handleReset}>Reset</Button>
             </div>
         );
     }
